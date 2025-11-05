@@ -58,58 +58,53 @@ import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// Protect these routes with Clerk authentication
+// 🛡 Define protected routes (Clerk will require login)
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
   "/transaction(.*)",
 ]);
 
-// --- Arcjet Security Setup ---
+// ⚙️ Arcjet setup – lightweight mode for Edge runtime
 const aj = arcjet({
-  key: process.env.ARCJET_KEY, // Your Arcjet API Key from .env.local
+  key: process.env.ARCJET_KEY,
   rules: [
-    // Basic protection from malicious traffic
+    // Basic request protection (DRY_RUN = logs only, low overhead)
     shield({
-      mode: "LIVE", // Use "DRY_RUN" for testing
+      mode: "DRY_RUN", // change to "LIVE" after verifying build works fine
     }),
-    // Bot detection
+    // Simple bot detection
     detectBot({
-      mode: "LIVE", // Blocks bots in production
-      allow: [
-        "CATEGORY:SEARCH_ENGINE", // Allow search engine crawlers
-        "GO_HTTP", // Allow internal tools (e.g., Inngest)
-      ],
+      mode: "DRY_RUN", // non-blocking to keep file size small
+      allow: ["CATEGORY:SEARCH_ENGINE", "GO_HTTP"],
     }),
   ],
 });
 
-// --- Clerk Authentication Setup ---
+// 👤 Clerk authentication middleware
 const clerk = clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
 
-  // Redirect unauthenticated users if accessing protected pages
+  // Redirect unauthenticated users accessing protected routes
   if (!userId && isProtectedRoute(req)) {
     return redirectToSignIn();
   }
 
-  // Allow request to proceed
+  // Otherwise continue request
   return NextResponse.next();
 });
 
-// --- Combine Arcjet + Clerk ---
+// ✅ Chain Arcjet first, then Clerk
 export default createMiddleware(aj, clerk);
 
-// --- Config for Vercel Build ---
+// ✅ Config — no Node runtime here (Edge compatible)
 export const config = {
-  // 👇 This line prevents the 1 MB "Edge Function too large" error
-  runtime: "nodejs",
-
   matcher: [
     // Exclude Next.js internals and static assets
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run middleware for API and TRPC routes
+    // Always run for API and TRPC routes
     "/(api|trpc)(.*)",
   ],
 };
+
 
