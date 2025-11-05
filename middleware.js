@@ -58,46 +58,42 @@ import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// 🛡 Define protected routes (Clerk will require login)
+// 🛡 Define protected routes
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
   "/transaction(.*)",
 ]);
 
-// ⚙️ Arcjet setup – lightweight mode for Edge runtime
+// ⚙️ Arcjet setup (DRY_RUN = lightweight + deploys fine)
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
   rules: [
-    // Basic request protection (DRY_RUN = logs only, low overhead)
     shield({
-      mode: "DRY_RUN", // change to "LIVE" after verifying build works fine
+      mode: "DRY_RUN", // change to "LIVE" after testing
     }),
-    // Simple bot detection
     detectBot({
-      mode: "DRY_RUN", // non-blocking to keep file size small
+      mode: "DRY_RUN", // low-overhead bot check
       allow: ["CATEGORY:SEARCH_ENGINE", "GO_HTTP"],
     }),
   ],
 });
 
-// 👤 Clerk authentication middleware
+// 👤 Clerk setup
 const clerk = clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
 
-  // Redirect unauthenticated users accessing protected routes
   if (!userId && isProtectedRoute(req)) {
     return redirectToSignIn();
   }
 
-  // Otherwise continue request
   return NextResponse.next();
 });
 
-// ✅ Chain Arcjet first, then Clerk
+// ✅ Combine both
 export default createMiddleware(aj, clerk);
 
-// ✅ Config — no Node runtime here (Edge compatible)
+// ✅ SINGLE config export — only one allowed
 export const config = {
   matcher: [
     // Exclude Next.js internals and static assets
@@ -106,5 +102,3 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
-
-
