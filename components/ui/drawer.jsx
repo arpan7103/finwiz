@@ -13,7 +13,10 @@ const Drawer = ({
 )
 Drawer.displayName = "Drawer"
 
-const DrawerTrigger = DrawerPrimitive.Trigger
+const DrawerTrigger = React.forwardRef(({ ...props }, ref) => (
+  <DrawerPrimitive.Trigger ref={ref} suppressHydrationWarning {...props} />
+))
+DrawerTrigger.displayName = "DrawerTrigger"
 
 const DrawerPortal = DrawerPrimitive.Portal
 

@@ -10,11 +10,11 @@ import {
 // Stats Data
 export const statsData = [
   {
-    value: "50K+",
+    value: "100K+",
     label: "Active Users",
   },
   {
-    value: "$2B+",
+    value: "$2M+",
     label: "Transactions Tracked",
   },
   {
@@ -88,24 +88,24 @@ export const howItWorksData = [
 // Testimonials Data
 export const testimonialsData = [
   {
-    name: "Sarah Johnson",
-    role: "Small Business Owner",
+    name: "Ayush Mishra",
+    role: "Freelance Developer", // Changed to better suit a tech-savvy user in India
     image: "https://randomuser.me/api/portraits/women/75.jpg",
     quote:
-      "Welth has transformed how I manage my business finances. The AI insights have helped me identify cost-saving opportunities I never knew existed.",
+      "This app is a gem! The **automatic SMS-based expense tracking** is flawless—it reads my bank and UPI messages instantly. No more manual entry, and the AI categorization is spot-on for Indian spending.",
   },
   {
-    name: "Michael Chen",
-    role: "Freelancer",
+    name: "Aniket Gupta",
+    role: "MBA Student", // Changed to a role focused on tight budgeting and modern tools
     image: "https://randomuser.me/api/portraits/men/75.jpg",
     quote:
-      "The receipt scanning feature saves me hours each month. Now I can focus on my work instead of manual data entry and expense tracking.",
+      "As a student, saving is everything. The **budgeting feature with real-time alerts** has helped me cut my 'chai-sutta' expenses by 20%. It’s simple, fast, and actually helps you stick to your limits.",
   },
   {
-    name: "Emily Rodriguez",
-    role: "Financial Advisor",
+    name: "Ashutosh Yadav",
+    role: "Small Business Owner",
     image: "https://randomuser.me/api/portraits/women/74.jpg",
     quote:
-      "I recommend Welth to all my clients. The multi-currency support and detailed analytics make it perfect for international investors.",
+      "I use it to separate my business and personal spending. The **clean reports and visual charts** give me a quick monthly overview. For a tool built by a student, the sheer utility and ease of use are truly impressive.",
   },
 ];

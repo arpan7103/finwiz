@@ -70,7 +70,7 @@ export function AddTransactionForm({
             amount: "",
             description: "",
             accountId: accounts.find((ac) => ac.isDefault)?.id,
-            date: new Date(),
+            date: new Date(2024, 0, 1, 0, 0, 0, 0),
             isRecurring: false,
           },
   });
@@ -119,6 +119,13 @@ export function AddTransactionForm({
       router.push(`/account/${transactionResult.data.accountId}`);
     }
   }, [transactionResult, transactionLoading, editMode]);
+
+  // Set current date on client to avoid hydration mismatch
+  useEffect(() => {
+    if (!editMode && !initialData) {
+      setValue("date", new Date());
+    }
+  }, [editMode, initialData, setValue]);
 
   const type = watch("type");
   const isRecurring = watch("isRecurring");
@@ -180,7 +187,7 @@ export function AddTransactionForm({
             <SelectContent>
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${parseFloat(account.balance).toFixed(2)})
+                  {account.name} (₹{parseFloat(account.balance).toFixed(2)})
                 </SelectItem>
               ))}
               <CreateAccountDrawer>
