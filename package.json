@@ -35,6 +35,7 @@
     "next": "^15.5.4",
     "next-themes": "^0.4.3",
     "react": "^19.0.0-rc-66855b96-20241106",
+    "react-day-picker": "^9.11.2",
     "react-dom": "^19.0.0-rc-66855b96-20241106",
     "react-hook-form": "^7.53.2",
     "react-spinner": "^0.2.7",
@@ -51,7 +52,6 @@
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
     "prisma": "^6.16.3",
-    "react-day-picker": "9.11.1",
     "react-email": "4.2.12",
     "react-spinners": "0.17.0",
     "tailwindcss": "^3.4.1"

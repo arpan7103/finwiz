@@ -1,22 +1,61 @@
+// // middleware.js
+// import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+// import { NextResponse } from "next/server";
 
+// const isProtectedRoute = createRouteMatcher([
+//   "/dashboard(.*)",
+//   "/account(.*)",
+//   "/transaction(.*)",
+// ]);
 
+// export default clerkMiddleware(async (auth, req) => {
+//   const { userId, redirectToSignIn } = await auth();
 
-import { NextResponse } from "next/server";
+//   if (!userId && isProtectedRoute(req)) {
+//     return redirectToSignIn();
+//   }
+
+//   return NextResponse.next();
+// });
+
+// export const config = {
+//   matcher: [
+//     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|svg|ttf|woff2?|ico)).*)",
+//     "/(api|trpc)(.*)",
+//   ],
+// };
+
+// middleware.js
+
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-// Import Arcjet dynamically to reduce Edge bundle size
+// ---- Arcjet: dynamic import (to keep Edge bundle small) ----
 let ajInstance;
+
+/**
+ * Lazily load Arcjet on first request.
+ */
 async function getArcjet() {
   if (!ajInstance) {
-    const arcjet = (await import("@arcjet/next")).default;
-    const { shield, detectBot } = await import("@arcjet/next");
+    const arcjetModule = await import("@arcjet/next");
+    const arcjet = arcjetModule.default;
+    const { shield, detectBot } = arcjetModule;
+
     ajInstance = arcjet({
       key: process.env.ARCJET_KEY,
       rules: [
-        shield({ mode: "DRY_RUN" }), // use "LIVE" in production
+        // Shield protection
+        shield({
+          mode: "LIVE", // use "DRY_RUN" if you only want to log
+        }),
+        // Bot detection
         detectBot({
-          mode: "DRY_RUN",
-          allow: ["CATEGORY:SEARCH_ENGINE", "GO_HTTP"],
+          mode: "LIVE", // use "DRY_RUN" to not block
+          allow: [
+            "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc.
+            "GO_HTTP",                // For Inngest or similar
+          ],
         }),
       ],
     });
@@ -24,35 +63,36 @@ async function getArcjet() {
   return ajInstance;
 }
 
-// Define protected routes (Clerk)
+// ---- Clerk: protected routes ----
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
   "/transaction(.*)",
 ]);
 
-// Middleware
+// ---- Combined middleware: Arcjet first, then Clerk ----
 export default clerkMiddleware(async (auth, req) => {
-  // Run Arcjet check first (lightweight async import)
+  // 1) Arcjet protection
   const aj = await getArcjet();
   await aj.protect(req);
 
+  // 2) Clerk auth
   const { userId, redirectToSignIn } = await auth();
 
-  // Redirect unauthenticated users
+  // Redirect unauthenticated users trying to access protected routes
   if (!userId && isProtectedRoute(req)) {
     return redirectToSignIn();
   }
 
-  // Allow the request
+  // Allow request to continue
   return NextResponse.next();
 });
 
-// Config — only one export allowed
+// ---- Middleware config ----
 export const config = {
   matcher: [
-    // Skip Next.js internals and static assets
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpg|png|svg|ttf|woff2?|ico|zip)).*)",
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
     "/(api|trpc)(.*)",
   ],
